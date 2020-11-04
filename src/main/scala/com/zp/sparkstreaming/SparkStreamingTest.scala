@@ -13,6 +13,7 @@ object SparkStreamingTest {
     // 第二个参数为采集周期
     val context = new StreamingContext(config, Seconds(3))
     // 在指定的端口中采集数据
+    // 需要在服务器上执行nc -lk 9999
     val socketStream: ReceiverInputDStream[String] = context.socketTextStream("192.168.223.129",9999)
     // 扁平化
     val wordStream: DStream[String] = socketStream.flatMap(x=>x.split(" "))
