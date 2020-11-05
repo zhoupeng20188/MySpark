@@ -1,17 +1,16 @@
 package com.zp.sparkstreaming
 
 import org.apache.spark.SparkConf
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
 import org.apache.spark.streaming.kafka.KafkaUtils
-import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
-  * 从kafka中读取消息
-  * 数据统计会累加
+  * 滑动窗口
   * @Author zp
-  * @create 2020/11/5 9:03
+  * @create 2020/11/5 17:08
   */
-object SparkKafkaWithStateTest {
+object WindowTest {
   def main(args: Array[String]): Unit = {
     // 设置运行环境
     val config = new SparkConf().setMaster("local[*]")
@@ -32,12 +31,14 @@ object SparkKafkaWithStateTest {
       "groupTest",
       Map("topic001" -> 4))
 
+    // 第一个参数为窗口大小，第二个参数为滑动的步长
+    // 窗口大小和步长都为采集周期的整数倍
+    val windowDStream: DStream[(String, String)] = kafkaDStream.window(Seconds(10),Seconds(5))
+
     // 扁平化
-    val wordStream: DStream[String] = kafkaDStream.flatMap(t => t._2.split(" "))
+    val wordStream: DStream[String] = windowDStream.flatMap(t => t._2.split(" "))
     // 转换数据格式
     val mapStream: DStream[(String, Int)] = wordStream.map((_, 1))
-    // 聚合
-//    val wordToSum: DStream[(String, Int)] = mapStream.reduceByKey(_ + _)
 
     // 将结果进行聚合
     val stateDStream: DStream[(String, Int)] = mapStream.updateStateByKey {
@@ -48,13 +49,11 @@ object SparkKafkaWithStateTest {
     }
     stateDStream.print()
 
-
-//    wordToSum.print()
-
     // 启动采集器
     context.start();
     // 等待采集器执行
     context.awaitTermination();
 
   }
+
 }

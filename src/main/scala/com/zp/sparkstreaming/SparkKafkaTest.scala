@@ -1,13 +1,13 @@
 package com.zp.sparkstreaming
 
-import kafka.serializer.StringDecoder
 import org.apache.spark.SparkConf
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
 import org.apache.spark.streaming.kafka.KafkaUtils
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
+  * 从kafka中读取消息
+  * 默认数据统计不会累加
   * @Author zp
   * @create 2020/11/5 9:03
   */
