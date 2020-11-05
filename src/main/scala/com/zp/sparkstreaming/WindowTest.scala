@@ -19,9 +19,6 @@ object WindowTest {
     // 第二个参数为采集周期
     val context = new StreamingContext(config, Seconds(5))
 
-    // 保存数据的状态，需要设定checkpoint的路径
-    context.checkpoint("checkpoint");
-
 
     // 从kafka中消费消息
 
@@ -39,15 +36,9 @@ object WindowTest {
     val wordStream: DStream[String] = windowDStream.flatMap(t => t._2.split(" "))
     // 转换数据格式
     val mapStream: DStream[(String, Int)] = wordStream.map((_, 1))
-
-    // 将结果进行聚合
-    val stateDStream: DStream[(String, Int)] = mapStream.updateStateByKey {
-      case (seq, buffer) => {
-        val sum: Int = buffer.getOrElse(0) + seq.sum
-        Option(sum)
-      }
-    }
-    stateDStream.print()
+    // 聚合
+    val wordToSum: DStream[(String, Int)] = mapStream.reduceByKey(_ + _)
+    wordToSum.print()
 
     // 启动采集器
     context.start();
